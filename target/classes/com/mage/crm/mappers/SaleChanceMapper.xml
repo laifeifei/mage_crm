@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mage.crm.dao.SaleChanceDao">
+    <sql id="sale_chance_column">
+        id,customer_name as customerName,chance_source chanceSource,cgjl,overview,link_man as linkMan,
+        link_phone as linkPhone,description,create_man as createMan,assign_man as  assignMan,
+        assign_time as assignTime,state,dev_result as devResult,is_valid as isValid,create_date as createDate,
+        update_date as updateDate
+    </sql>
+    <!--条件查询-->
+    <select id="querySaleChancesByParams" resultType="saleChance" parameterType="saleChanceQuery">
+        select <include refid="sale_chance_column"/>
+        from t_sale_chance
+        <where>
+            is_valid=1
+            <if test="createMan!=null and createMan!=''">
+                and create_man like concat('%',#{createMan},'%')
+            </if>
+            <if test="customerName!=null and customerName!=''">
+                AND customer_name LIKE concat('%',#{customerName},'%')
+            </if>
+            <if test="state!=null and state!=''">
+                AND state = #{state}
+            </if>
+            <if test="createDate!=null and createDate!=''">
+                <![CDATA[
+            AND create_date <=#{createDate}
+            ]]>
+            </if>
+        </where>
+    </select>
+    <insert id="insert" parameterType="saleChance">
+        insert into
+        t_sale_chance
+        (chance_source,customer_name,cgjl,overview,link_man,link_phone,description,
+        create_man,assign_man,assign_time,state,dev_result,is_valid,create_date,update_date)
+        values(#{chanceSource},#{customerName},#{cgjl},#{overview},#{linkMan},#{linkPhone},
+        #{description},#{createMan},#{assignMan},#{assignTime},#{state},
+        #{devResult},#{isValid},#{createDate},#{updateDate})
+    </insert>
+    <!--修改营销机会-->
+    <update id="update" parameterType="saleChance">
+        update t_sale_chance set chance_source=#{chanceSource},customer_name=#{customerName},
+            cgjl=#{cgjl},overview=#{overview},link_man=#{linkMan},link_phone=#{linkPhone},
+            description=#{description},assign_man=#{assignMan},assign_time=#{assignTime},state=#{state},
+            update_date=#{updateDate}
+        where id=#{id}
+        and is_valid=1
+    </update>
+    <!--删除营销机会-->
+    <update id="delete" >
+        update t_sale_chance set is_valid=0 where id in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+    <!--通过id查询营销机会-->
+    <select id="querySaleChancesById" parameterType="int" resultType="saleChance">
+        select <include refid="sale_chance_column"/>
+        from t_sale_chance where id=#{id} and is_valid=1
+    </select>
+    <!--更新分配状态-->
+    <update id="updataDevResult">
+        update t_sale_chance set dev_result=#{dev},update_date=now() where id=#{saleChanceId}
+    </update>
+</mapper>
